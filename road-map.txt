@@ -1,2 +1,4 @@
 -  Routing and Controllers: Basics
--  Callback Functions and Route::view()
+-	Blade Basics
+- 	Auth Basics
+- 	Database Basics =>

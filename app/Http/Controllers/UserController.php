@@ -2,27 +2,65 @@
 
 namespace App\Http\Controllers;
 
+
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Requests\LoginRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Auth\RedirectsUsers;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
 
 class UserController extends Controller
 {
-    public function show(
-        string $id
-    ) {
-        dd($id);
-    }
 
-    public function profile()
+
+    public function login(
+        LoginRequest $request
+    ) {
+
+        if ($this->attemptLogin($request)) {
+
+            $request->session()->regenerate();
+
+            return to_route('admin.home');
+        }
+        return back()->with([
+            'fail' => 'The provided credentials do not match our records.',
+        ]);
+    }
+    /**
+     * Log the user out of the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    public function logout(Request $request)
     {
-        // $route = Route::current(); // Illuminate\Routing\Route
-        // $name = Route::currentRouteName(); // string
-        // $action = Route::currentRouteAction(); // string
-        // dd(
-        //     $route,
-        //     $name,
-        //     $action
-        // );
-        return to_route('show', ['id' => 5]);
+        auth()->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return to_route('login.page');
+    }
+    /**
+     * Attempt to log the user into the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    protected function attemptLogin(Request $request)
+    {
+        return Auth::attemptWhen(
+            [
+
+                'email' => $request->validated('email'),
+                'password' => $request->validated('password'),
+            ],
+            function (User $user) {
+                return $user->active;
+            }
+        );
     }
 }
